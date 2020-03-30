@@ -1,5 +1,5 @@
 """
-Version vt3_0014
+Version vt3_0015
 Python 3.8
 """
 
@@ -7,6 +7,8 @@ import cdw
 import random
 
 class Card:
+    """creates a Vocabulary Card with a word in Language1 and Language 2 (label),
+    valcorrect/valwrong tells how often the word was guessed right or wrong"""
     def __init__(self, label='noName', lang1="-", lang2="-", valcorrect=0, valwrong=0):
         self.label = label
         self.lang1 = lang1
@@ -20,27 +22,27 @@ class Card:
                                   self.lang2,
                                   self.valcorrect,
                                   self.valwrong)
-##class Deck(Card):
 class Deck:
-    """take x cards to check"""
-    fields = cdw.fields_w_four_vals('new.csv')
-    def __init__(self, karteikasten=None):
+    """Creates a box with Vocabulary cards"""
+    fields = cdw.fields_w_four_vals('new.csv')  #load csv file with words.
+                                                #2 additional vals for right/wrong guess
+    def __init__(self, karteikasten=None):      #creates list with (vocabulary) Card objects
         if karteikasten == None:
             karteikasten =  []
         self.karteikasten = karteikasten
-    def __str__(self):
+    def __str__(self):                          #print out cards
         t = ["Cards available:"]
         for obj in self.karteikasten:
             s = object.__str__(str(obj.label)+": "+obj.lang1+" - "+obj.lang2)
             t.append(s)        
         return '\n'.join(t)
 
-    def __add__(self, other):
-        t_merged = ["Cards merged::::"]
+    def __add__(self, other):                   #merge 2 Deck's
+        t_merged = ["Decks merged:"]
         return Deck(karteikasten = self.karteikasten + other.karteikasten)
             
-    def creator(self,number_cards=3): #for all cards
-        for i in range(1,len(Deck.fields)):  #De-En should not be a card  
+    def creator(self):  #creates Deck with all available Dards
+        for i in range(1,len(Deck.fields)):  #Deck.fields[0] with Language not a card  
             card = Card("Karte "+str(i),
                         Deck.fields[i][0],
                         Deck.fields[i][1],
@@ -48,8 +50,8 @@ class Deck:
                         int(Deck.fields[i][3]))
             self.karteikasten.append(card)
 
-    def dict_returner(self):#creates a dictionary with the cards for later export
-        dict_ex = {}
+    def dict_returner(self):    #creates a histogram with the cards for later export
+        dict_ex = {}            #export could happen to save right/wrong answers
         dict_ex[0] = [Deck.fields[0][0],
                         Deck.fields[0][1],
                         int(Deck.fields[0][2]),
@@ -62,10 +64,11 @@ class Deck:
         return dict_ex
 
     def add_card(self, card):
-        """Adds a card to the deck. """
+        """Adds a card to the Deck. """
         self.karteikasten.append(card)
         
     def move_cards(self, hand, card_amount):
+        """ takes a card from Deck and puts it in another one"""
         for i in range(card_amount):
             hand.add_card(self.pop_card())
 
@@ -76,7 +79,7 @@ class Deck:
         random.shuffle(self.karteikasten)
         
 class Session(Deck):
-    """ session with only a part of the box"""
+    """Take a part of all available Cards from Deck and put it in other box for training"""
     def __init__(self, karteikasten=None):
         if karteikasten == None:
             karteikasten =  []
@@ -88,69 +91,88 @@ class Session(Deck):
             t.append(s)        
         return '\n'.join(t)
     
-#only for testing. Will be replaced with pyqt5 or similar layout
-def training_programm(amount_cards):
+def training_initialize():
+    """Interface for testing, will be replaced with PyQt5"""
     deck = Deck()
-##    amount_cards += 1 #because of card 0 is language def
-    deck.creator() #creates all cards
-    session = Session()
-    deck.move_cards(session, amount_cards)
-    print(session)
-##    print(amount_cards)
-##    print(deck)
+    deck.creator() #creates Deck with all Voc. Cards
+    amount_cards = int(input("Enter amount of random Cards for Test (max.="+
+                             str(len(deck.karteikasten))+"):"))
+    amount_rounds = int(input("Enter amount of rounds for Test:"))
+    session = Session() 
+    deck.move_cards(session, amount_cards)  #creates Box with requested amount of cards
+    for o in range(amount_rounds):          #how many times you want to try
+        if len(session.karteikasten)==0:
+            print("No More Cards in Box. Good job!")
+            return ende()
+        training_programm_with_objects(amount_cards,session,deck)
+
+def training_programm_with_objects(amount_cards,session,deck):
+    """Also only for testing"""
+    print("")
+    print("In this session there are following ",session)
+    print("")
     deck_neu = deck + session
     check_card = session
-##    if amount_cards == 1:
-##        k = 1
-##    else:
-##        k = random.randint(1,amount_cards-1) #karteikasten[n+1] not included
-    k = random.randint(1,amount_cards-1) #karteikasten[n+1] not included
+    k = random.randint(0,len(check_card.karteikasten)) #karteikasten[n+1] not included
     print('')
     print("initialize training programm.....")
     print('')
     language1 = deck.fields[0][0]
     language2 = deck.fields[0][1]
-    word_lang1 = check_card.karteikasten[k].lang1
-    word_lang2 = check_card.karteikasten[k].lang2
+    word_lang1 = check_card.karteikasten[k-1].lang1
+    word_lang2 = check_card.karteikasten[k-1].lang2
     z = input("what is '"+word_lang1+"' in "+language2+"? :")
     if z == word_lang2:
-        check_card.karteikasten[k].valcorrect += 1
-        print("True!!")
+        check_card.karteikasten[k-1].valcorrect += 1  #Correct value +1 in Card
+        check_card.karteikasten.pop(k-1) #if answer correct, card will be taken out
     else:
-        check_card.karteikasten[k].valwrong += 1
-        print("Not True!!!")
+        check_card.karteikasten[k-1].valwrong += 1  #Wrong value +1 in Card
+    
+def print_cards(deck,session,deck_neu):
+    """For testing reasons in menu"""
+    print("")
+    print(" + + + whole deck + + + ")
+    print(deck)
+
+    print("")
+    print(" + + + This session:",20*" +")
+    print(session)
+
+    print("")
+    print(" + + + Deck Neu (Total Deck+ + + ")
+    print(deck_neu)
+    
+    print(" + + + All Cards with Results + + + ")
     for card in deck_neu.karteikasten:
         print(card)
-    #just for testing. Might drop out soon or be changed.
+    
+def save_option(deck_1):
+    """will save cards for later use. right/wrong values included"""
     save_option = input("Save results?")
     if save_option == "y":
-        print(" + + + deck + + + ")
-        print(deck)
-        print(" + + + session + + + ")
-        print(session)
-        print(" + + + Deck Neu + + + ")
-        print(deck_neu)
-        print(" + + +  + + + ")
-        #works. But retry will not refresh csv file. But when saving and ending, and starting
-        #the new numbers are in.  So it works, but might load the csv in the cache or so...
-        cdw.csv_exporter_3(deck_neu.dict_returner(), 'new')
-        for card in deck_neu.karteikasten:
+        cdw.csv_exporter_3(deck_1.dict_returner(), 'new')
+        for card in deck_1.karteikasten:
             print(card)
         print("Will be saved")
     elif save_option == "n":
         print("won't be saved")
     else:
         print("wrong inputs")
+
+def try_again():
+    """retry option in menu"""
     again = str(input("Try again?"))
     if again == 'y':
         training_programm_with_objects(int(input("amount_cards=")))
     else:
         print("Ok, then not...")
         
+def ende():
+    print("This is the end")
+
 def print_attributes(obj):
     for attr in vars(obj):
         print(attr, getattr(obj, attr))
 
 if __name__ == "__main__":
-
-    training_programm(int(input("amount_cards=")))
+    training_initialize()
