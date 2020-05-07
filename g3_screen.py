@@ -302,7 +302,7 @@ class Ui_MainWindow(Session,Deck):
         else:
             print("Some error might have occured... ")
 
-        if self.lineedit.text() == word_lang1:
+        if self.lineedit.text().upper() == word_lang1.upper():
             self.label_lineedit.setText("True!")
             self.label_lineedit.setStyleSheet("background-color: green")
             self.label_lineedit.show()
