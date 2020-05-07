@@ -30,6 +30,8 @@ def readMyFile_four_columns(filename):
 ##            val3.append(row[4])
     return lang1, lang2, val1, val2#, val3
 
+
+
 #takes tuple from readmyfile and makes dict 
 def fields(filename):
     field = {}
@@ -49,6 +51,7 @@ def fields_w_vals(filename):
         field[i][0] = lang1[i]
         field[i][1] = lang2[i]
     return field
+
 
 #same like fields() but with extra '0' for saving right/wrong
 def fields_w_four_vals(filename):
@@ -73,6 +76,7 @@ def fields_w_five_vals(filename):
         field[i][2] = val1[i]
         field[i][3] = val2[i]      
     return field
+
 
 #menu item: 'Export csv file'
 def csv_exporter(vocabulary_dictionary,file_namer):
@@ -117,4 +121,5 @@ def csv_exporter_3(vocabulary_dictionary,file_namer):
            writer.writerow([value[0], value[1], value[2], value[3]])
         print(" ")
         print('"'+file_namer+'.csv'+'"'+" exported")
+
         return
